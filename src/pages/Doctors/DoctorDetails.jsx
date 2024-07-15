@@ -5,9 +5,38 @@ import Doctors from "./Doctors";
 import DoctorsAbout from "./DoctorsAbout";
 import Feedback from "./Feedback";
 import SidePanel from "./SidePanel";
+import useFetchData from "../../hooks/useFetchData";
+import Loader from "../../components/Loader/Loading";
+import Error from "../../components/Error/Error";
+import axios from "axios";
+import { useParams } from "react-router-dom";
 
 const DoctorDetails = () => {
+  const base_url = process.env.REACT_APP_BASE_URL;
   const [tab, setTab] = useState("about");
+  const { id } = useParams();
+  const {
+    data: doctors,
+    loading,
+    error,
+  } = useFetchData(`${base_url}/doctors/${id}`);
+
+  const {
+    name,
+    qualifications,
+    experiences,
+    timeSlots,
+    reviews,
+    bio,
+    about,
+    averageRating,
+    totalRating,
+    specialization,
+    ticketPrice,
+    photo,
+  } = doctors?.data || {};
+
+  console.log("doct:", doctors?.data);
   return (
     <section>
       <div className="max-w-[1170px] px-5 mx-auto">
@@ -19,24 +48,21 @@ const DoctorDetails = () => {
               </figure>
               <div>
                 <span className="bg-[#CCF0F3] text-irisBlueColor py-1 px-6  lg:py-2 lg:px-6 text-[12px] lg:text-[16px] leading-4 lg:leadin-7 font-semibold rounded  ">
-                  Surgen
+                  {specialization}
                 </span>
                 <h3 className="text-headingColor mt-3 font-bold leading-9 text-[22px] ">
-                  Muhibur Rehman
+                  {name}
                 </h3>
                 <div className="flex items-center gap-[6px]">
                   <span className="flex items-center gap-[6px] text-[14px] leading-6 lg:text-[16px] lg:leading-7 font-semibold text-headingColor ">
-                    <img src={starIcon} alt="" /> {"4.8"}
+                    <img src={starIcon} alt="" /> {averageRating}
                   </span>
                   <span className="text-[14px] leading-6 lg:text-[16px] leading-4 lg:leading-7 font-[400] text-textColor ">
-                    ({272})
+                    ({totalRating})
                   </span>
                 </div>
                 <p className="text_para text-[14px] md:text-[15px] leading-6 lg:max-w-[390px] ">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Iste
-                  nihil repudiandae ipsum quasi veniam vitae et illo temporibus
-                  commodi id! Distinctio beatae nam non quidem, aliquam fugit
-                  dolorum repudiandae quisquam.
+                  {bio}
                 </p>
               </div>
             </div>
@@ -61,12 +87,25 @@ const DoctorDetails = () => {
               </button>
             </div>
             <div className="mt-[50px]">
-              {tab === "about" && <DoctorsAbout />}
-              {tab === "feedback" && <Feedback />}
+              {tab === "about" && (
+                <DoctorsAbout
+                  name={name}
+                  about={about}
+                  qualification={qualifications}
+                  experience={experiences}
+                />
+              )}
+              {tab === "feedback" && (
+                <Feedback reviews={reviews} totalRating={totalRating} />
+              )}
             </div>
           </div>
           <div>
-            <SidePanel />
+            <SidePanel
+              doctorId={doctors?.data?._id}
+              ticketPrice={ticketPrice}
+              timeSlots={timeSlots}
+            />
           </div>
         </div>
       </div>

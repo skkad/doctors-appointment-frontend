@@ -4,37 +4,40 @@ import { formateDate } from "../../utils/formateDate";
 import { AiFillStar } from "react-icons/ai";
 import FeedbackForm from "./FeedbackForm";
 
-const Feedback = () => {
+const Feedback = ({ reviews, totalRating }) => {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   return (
     <div>
       <div className="mb-[50px]">
         <h4 className="text-[20px] leading-[30px] text-headingColor font-bold mb-[30px] ">
-          All reviews (272)
+          All reviews ({totalRating !== 0 ? totalRating : reviews.length})
         </h4>
-        <div className="flex justify-between gap-10 mb-[30px]">
-          <div className="flex gap-3">
-            <figure className="w-10 h-10 rounded-full ">
-              <img className="w-full" src={avatar} alt="" />
-            </figure>
-            <div>
-              <h5 className="text-[16px] leading-6 text-primaryColor font-bold ">
-                Ali Ahmed
-              </h5>
-              <p className="text-[14px] leading-6 text-textColor ">
-                {formateDate("02-14-2023")}
-              </p>
-              <p className="text_para mt-3 font-medium text-[15px]">
-                Good Services, Highly recommended.
-              </p>
+        {reviews?.map((ele, index) => (
+          <div key={index} className="flex justify-between gap-10 mb-[30px]">
+            <div className="flex gap-3">
+              <figure className="w-10 h-10 rounded-full ">
+                <img className="w-full" src={ele?.user?.photo} alt="" />
+              </figure>
+              <div>
+                <h5 className="text-[16px] leading-6 text-primaryColor font-bold ">
+                  {ele?.user?.name}
+                </h5>
+                <p className="text-[14px] leading-6 text-textColor ">
+                  {formateDate(ele?.createdAt)}
+                </p>
+                <p className="text_para mt-3 font-medium text-[15px]">
+                  {ele?.reviewText}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-1">
+              {[...Array(ele?.rating).keys()].map((_, index) => (
+                <AiFillStar key={index} color="#0067FF" />
+              ))}
             </div>
           </div>
-          <div className="flex gap-1">
-            {[...Array(5).keys()].map((_, index) => (
-              <AiFillStar key={index} color="#0067FF" />
-            ))}
-          </div>
-        </div>
+        ))}
+
         {!showFeedbackForm && (
           <div className="text-center">
             <button className="btn" onClick={() => setShowFeedbackForm(true)}>

@@ -44,7 +44,7 @@ const DoctorsCard = ({ doctor }) => {
           </p>
         </div>
         <Link
-          to="/doctors"
+          to={`/doctors/${doctor._id}`}
           className="w-[44px] h-[44px] rounded-full border border-solid border-[#181A1E] flex items-center justify-center group hover:bg-primaryColor hover:boder-none "
         >
           <BsArrowRight className="group-hover:text-white w-6 h-5" />

@@ -1,11 +1,17 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import signupImg from "../assets/images/signup.gif";
 import avatar from "../assets/images/doctor-img01.png";
+import uploadImageToCloudinary from "../utils/uploadCloudinary.js";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { HashLoader } from "react-spinners";
 
 const SignUp = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previousURL, setPreviusURL] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullname: "",
     email: "",
@@ -17,12 +23,54 @@ const SignUp = () => {
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  const handleFileInputChange = (e) => {
+  const handleFileInputChange = async (e) => {
     const file = e.target.files[0];
     console.log(file);
+    // const data = await uploadImageToCloudinary(file);
+    try {
+      const data = new FormData();
+      data.append("my_file", file);
+      const res = await axios.post(
+        `${process.env.REACT_APP_BASE_URL}/auth/upload`,
+        data
+      );
+      console.log("file upload:", res.data);
+      setPreviusURL(res.data.url);
+      setSelectedFile(res.data.url);
+      setFormData({ ...formData, photo: res.data.url });
+    } catch (error) {
+      // alert(error.message);
+      toast.error(error.response.data.message);
+    }
   };
   const submitHandler = async (event) => {
     event.preventDefault();
+    setLoading(true);
+    console.log(JSON.stringify(formData));
+    let payload = {
+      name: formData.fullname,
+      email: formData.email,
+      password: formData.password,
+      photo: formData.photo,
+      gender: formData.gender,
+      role: formData.role,
+    };
+    try {
+      await axios
+        .post(`${process.env.REACT_APP_BASE_URL}/auth/register`, payload)
+        .then((res) => {
+          setLoading(false);
+          toast.success(res.data.message);
+          navigate("/login");
+        })
+        .catch((err) => {
+          toast.error(err.response.data.message);
+          setLoading(false);
+        });
+    } catch (error) {
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
   };
   return (
     <section className="px-5 xl:px-0 ">
@@ -38,7 +86,7 @@ const SignUp = () => {
             <h3 className="text-headingColor leading-9 tetx-[22px] font-bold mb-10 ">
               Create an <span className="text-primaryColor">account</span>
             </h3>
-            <form action="">
+            <form action="" onSubmit={submitHandler}>
               <div className="mb-5">
                 <input
                   type="text"
@@ -66,6 +114,7 @@ const SignUp = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-4 py-3 border-b border-solid border-[#0066ff61] focus:outline-none focus:border-b-primaryColor text-[16px] leading-7 text-headingColor placeholder:text-textColor cursor-pointer rounded-md "
                 />
               </div>
@@ -89,7 +138,7 @@ const SignUp = () => {
                   htmlFor=""
                   className="text-headingColor font-bold text-[16px] leading-7 "
                 >
-                  Are you a:
+                  Gender:
                   <select
                     name="gender"
                     className="text-textColor font-semibold text-[15px] leading-7 px-4 py-3 focus:outline-none "
@@ -104,9 +153,15 @@ const SignUp = () => {
                 </label>
               </div>
               <div className="mb-5 flex items-center gap-3 ">
-                <figure className="w-[60px] h-[60px] rounded-full border-2 boder-solid boder-primaryColor flex items-center justify-center  ">
-                  <img src={avatar} alt="" className="w-full rounded-full" />
-                </figure>
+                {selectedFile && (
+                  <figure className="w-[60px] h-[60px] rounded-full border-2 boder-solid boder-primaryColor flex items-center justify-center  ">
+                    <img
+                      src={previousURL}
+                      alt=""
+                      className="w-full rounded-full"
+                    />
+                  </figure>
+                )}
                 <div className="relative w-[130px] h-[50px] ">
                   <input
                     type="file"
@@ -126,10 +181,11 @@ const SignUp = () => {
               </div>
               <div className="mt-7">
                 <button
+                  disabled={loading && true}
                   type="submit"
                   className="w-full bg-primaryColor text-white text-[18px] leading-[30px] rounded-lg px-4 py-3 "
                 >
-                  Sign Up
+                  {loading ? <HashLoader size={35} color="#fff" /> : "Sign Up"}
                 </button>
               </div>
               <p className="mt-5 text-textColor text-center">

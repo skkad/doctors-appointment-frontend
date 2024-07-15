@@ -1,11 +1,50 @@
 import React, { useState } from "react";
 import { AiFillStar } from "react-icons/ai";
+import { toast } from "react-toastify";
+import { HashLoader } from "react-spinners";
+import axios from "axios";
+import { useParams } from "react-router-dom";
 
 const FeedbackForm = () => {
+  const base_url = process.env.REACT_APP_BASE_URL;
+  const token = localStorage.getItem("token");
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [reviewText, setReviewText] = useState("");
-  const handleSubmitFeedback = async () => {};
+  const [loading, setLoading] = useState("");
+  const { id } = useParams();
+  const handleSubmitFeedback = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (!rating || !reviewText) {
+        setLoading(false);
+        toast.error("Rating & Review Fields are required");
+      }
+      let payload = {
+        rating: rating,
+        reviewText: reviewText,
+      };
+      axios
+        .post(`${base_url}/doctors/${id}/reviews`, payload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then((res) => {
+          console.log("feedback", res);
+          setLoading(false);
+          toast.success(res.data.message);
+        })
+        .catch((err) => {
+          toast.error(err.response.data.message);
+        });
+    } catch (error) {
+      setLoading(false);
+      console.log("feedback", error);
+      toast.error(error.response.data.message);
+    }
+  };
   return (
     <form action="">
       <div>
@@ -54,7 +93,7 @@ const FeedbackForm = () => {
         ></textarea>
       </div>
       <button className="btn" onClick={handleSubmitFeedback}>
-        Submit Feedback
+        {loading ? <HashLoader size={35} color="#fff" /> : "Submit Feedback"}
       </button>
     </form>
   );

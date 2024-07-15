@@ -1,7 +1,14 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { authContext } from "../context/authContext";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { HashLoader } from "react-spinners";
 
 const Login = () => {
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { dispatch } = useContext(authContext);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -9,13 +16,49 @@ const Login = () => {
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+  const submitHandler = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    console.log(JSON.stringify(formData));
+    let payload = {
+      email: formData.email,
+      password: formData.password,
+    };
+    // let payload = JSON.stringify(formData);
+    try {
+      await axios
+        .post(`${process.env.REACT_APP_BASE_URL}/auth/login`, payload)
+        .then((res) => {
+          console.log(res);
+          setLoading(false);
+          dispatch({
+            type: "LOGIN_SUCCESS",
+            payload: {
+              user: res.data.data,
+              role: res.data.role,
+              token: res.data.token,
+            },
+          });
+          toast.success(res.data.message);
+          navigate("/home");
+        })
+        .catch((err) => {
+          console.log(err);
+          toast.error(err.response.data.message);
+          setLoading(false);
+        });
+    } catch (error) {
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
   return (
     <section className="px-5 lg:px-0">
-      <div className="w-full max-w-[570px] mx-auto rounded-lg shadow-md xs:p-10 ">
+      <div className="w-full max-w-[570px] mx-auto rounded-lg shadow-md p-[10px]">
         <h3 className="text-headingColor text-[22px] leading-9 font-bold mb-10 ">
           Hello <span className="text-primaryColor">Welcome</span> Back
         </h3>
-        <form action="" className="py-4 md:py-0">
+        <form action="" className="py-4 md:py-0" onSubmit={submitHandler}>
           <div className="mb-5">
             <input
               type="email"
@@ -41,7 +84,7 @@ const Login = () => {
               type="submit"
               className="w-full bg-primaryColor text-white text-[18px] leading-[30px] rounded-lg px-4 py-3 "
             >
-              Login
+              {loading ? <HashLoader size={35} color="#fff" /> : "Login"}
             </button>
           </div>
           <p className="mt-5 text-textColor text-center">
